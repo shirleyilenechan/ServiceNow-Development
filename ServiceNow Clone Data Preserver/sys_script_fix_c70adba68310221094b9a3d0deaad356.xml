@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<unload unload_date="2025-03-24 19:46:17">
+<sys_script_fix action="INSERT_OR_UPDATE">
+<before>false</before>
+<description/>
+<name>PagerDuty Clone Data Preserver</name>
+<record_for_rollback>true</record_for_rollback>
+<script><![CDATA[// Create the OR conditions for property names
+var sysPropertyConditions = [
+    'name=x_pd_integration.default_user',
+    'name=x_pd_integration.instance_url',
+    'name=x_pd_integration.sn2pd_mapping',
+    'name=x_pd_integration.default_service',
+    'name=x_pd_integration.api_key',
+    'name=x_pd_integration.webhook_restapi',
+    'name=x_pd_integration.sn_auth_user',
+    'name=x_pd_integration.sn_auth_userpwd',
+    'name=x_pd_integration.connection_id'
+];
+
+var sysUserConditions = [
+    'x_pd_integration_pagerduty_idISNOTEMPTY'
+];
+
+var sysUserGroupConditions = [
+    'x_pd_integration_pagerduty_scheduleISNOTEMPTY',
+	'x_pd_integration_pagerduty_escalationISNOTEMPTY',
+	'x_pd_integration_pagerduty_serviceISNOTEMPTY',
+	'x_pd_integration_pagerduty_teamISNOTEMPTY',
+	'x_pd_integration_pagerduty_webhookISNOTEMPTY'
+];
+
+var cmdbCiConditions = [
+    'x_pd_integration_pagerduty_serviceISNOTEMPTY',
+    'x_pd_integration_pagerduty_webhookISNOTEMPTY'
+];
+
+var priorityConditions = [
+	'pagerduty_priority_idISNOTEMPTY'
+];
+
+var priorityEPConditions = [
+	'active=true'
+];
+
+var changeEventConditions = [
+	'x_pd_integration_pagerduty_change_event_tokenISNOTEMPTY'
+]
+
+var incidentTypeConditions = [
+	'pagerduty_idISNOTEMPTY'
+];
+
+var serviceConditions = [
+	'service_idISNOTEMPTY'
+];
+
+var webhookConditions = [
+	'webhook_idISNOTEMPTY'
+];
+
+var customFieldConditions = [
+	'pd_field_idISNOTEMPTY'
+];
+
+var epConditions = [
+	'escalation_policy_idISNOTEMPTY'
+];
+
+var businessServiceConditions = [
+	'idISNOTEMPTY'
+];
+
+// Create a new GlideRecord for clone_data_preserver table
+function createPreserver(name, table, conditions) {
+	var preserverRecord = new GlideRecord('clone_data_preserver');
+	preserverRecord.initialize();
+
+	preserverRecord.setValue('table', table);
+	preserverRecord.setValue('name', name);
+	preserverRecord.setValue('sys_id', gs.generateGUID());
+
+	var queryStr = conditions.map(function(name) {
+		return name;
+	}).join('^OR');
+	
+	preserverRecord.setValue('condition', queryStr);
+	preserverRecord.setValue('active', true);
+	preserverRecord.setValue('order', 100);
+
+	// Insert the record
+	var recordSysId = preserverRecord.insert();
+}
+
+createPreserver('PagerDuty: sys_properties', `sys_properties`, sysPropertyConditions);
+createPreserver('PagerDuty: sys_user', 'sys_user', sysUserConditions);
+createPreserver('PagerDuty: sys_user_group', 'sys_user_group', sysUserGroupConditions);
+createPreserver('PagerDuty: cmdb_ci', 'cmdb_ci', cmdbCiConditions);
+createPreserver('PagerDuty: priority','x_pd_integration_pagerduty_priority', priorityConditions);
+createPreserver('PagerDuty: piority to EP mapping','x_pd_integration_map_priority_to_ep', priorityEPConditions);
+createPreserver('PagerDuty: change events','cmdb_ci_service', changeEventConditions);
+createPreserver('PagerDuty: incident type','x_pd_integration_pagerduty_incident_types', incidentTypeConditions);
+createPreserver('PagerDuty: custom fields','x_pd_integration_custom_field_mapping', customFieldConditions);
+createPreserver('PagerDuty: pagerDuty services','x_pd_integration_services', serviceConditions);
+createPreserver('PagerDuty: webhooks','x_pd_integration_pagerduty_webhooks', webhookConditions);
+createPreserver('PagerDuty: escalation policies','x_pd_integration_escalation_policies', epConditions);
+createPreserver('PagerDuty: business services','x_pd_integration_business_services', businessServiceConditions);]]></script>
+<sys_class_name>sys_script_fix</sys_class_name>
+<sys_created_by>admin</sys_created_by>
+<sys_created_on>2025-03-18 17:29:21</sys_created_on>
+<sys_id>c70adba68310221094b9a3d0deaad356</sys_id>
+<sys_mod_count>5</sys_mod_count>
+<sys_name>PagerDuty Clone Data Preserver</sys_name>
+<sys_package display_value="PagerDuty Incident Resolution Platform" source="x_pd_integration">39a9d9664f834e00dd657bb28110c77b</sys_package>
+<sys_policy/>
+<sys_scope display_value="PagerDuty Incident Resolution Platform">39a9d9664f834e00dd657bb28110c77b</sys_scope>
+<sys_update_name>sys_script_fix_c70adba68310221094b9a3d0deaad356</sys_update_name>
+<sys_updated_by>admin</sys_updated_by>
+<sys_updated_on>2025-03-24 18:26:20</sys_updated_on>
+<unloadable>false</unloadable>
+</sys_script_fix>
+</unload>

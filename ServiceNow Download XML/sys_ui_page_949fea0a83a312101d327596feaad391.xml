@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<unload unload_date="2025-02-17 21:59:43">
+<sys_ui_page action="INSERT_OR_UPDATE">
+<category>general</category>
+<client_script><![CDATA[function fetchAndSaveFile(url, filename, folder) {
+	var blob = fetch(url).then(r => {
+		if (r.status === 200) return r.blob()
+		return Promise.reject(new Error(r.statusText))
+    })
+	folder.file(filename, blob);
+}
+
+function fetchPagerDutyHealthCheck(zip) {
+    var instance = top.location.protocol + "//" + top.location.host;
+    var pagerDutyHealthCheck = JSON.parse(document.getElementById('jvar_pagerdutyHealthCheck').value);
+    
+    if (pagerDutyHealthCheck && pagerDutyHealthCheck.length > 0) {
+        var healthCheckFolder = zip.folder('PagerDuty Integration Health Check');
+        var url = instance + "/sys_script_execution_history.do?PDF&sys_id=" + pagerDutyHealthCheck[0].sys_id; 
+        var filename = "pagerDutyHealthCheck.pdf";
+        fetchAndSaveFile(url, filename, healthCheckFolder);
+    }
+}
+
+function fetchBusinessRules(zip) {
+    var instance = top.location.protocol + "//" + top.location.host;
+    var businessRules = JSON.parse(document.getElementById('jvar_businessRules').value);
+    var brFolder = zip.folder('PagerDuty Business Rules');
+
+    for (var i = 0; i < businessRules.length; i++) {
+        var url = instance + "/sys_script.do?XML&sys_id=" + businessRules[i].sys_id; 
+        var filename = businessRules[i].name + ".xml";
+        fetchAndSaveFile(url, filename, brFolder);
+    }
+}
+
+function fetchPriorityMappings(zip) {
+    var instance = top.location.protocol + "//" + top.location.host;
+    var priorityMappings = JSON.parse(document.getElementById('jvar_priorityMappings').value);
+    var priorityFolder = zip.folder('PagerDuty Priority Mappings');
+
+    for (var i = 0; i < priorityMappings.length; i++) {
+        var url = instance + "/x_pd_integration_pagerduty_priority.do?XML&sys_id=" + priorityMappings[i].sys_id; 
+        var filename = priorityMappings[i].name + ".xml";
+        fetchAndSaveFile(url, filename, priorityFolder);
+    }
+}
+
+function fetchScriptInclude(zip) {
+	var instance = top.location.protocol + "//" + top.location.host;
+    var scriptInclude = JSON.parse(document.getElementById('jvar_scriptInclude').value);
+    var siFolder = zip.folder('PagerDuty Script Includes');
+    
+    for (var i = 0; i < scriptInclude.length; i++){
+        var url = instance + "/sys_script_include.do?XML&sys_id=" + scriptInclude[i].sys_id;
+        var filename = scriptInclude[i].name + ".xml";
+		fetchAndSaveFile(url, filename, siFolder);
+    }
+}
+
+function fetchInboundFieldRules(zip) {
+    var instance = top.location.protocol + "//" + top.location.host;
+    var inboundFieldRules = JSON.parse(document.getElementById('jvar_inboundFieldRules').value || '[]');
+    
+    if (inboundFieldRules && inboundFieldRules.length > 0) {
+        var ifrFolder = zip.folder('PagerDuty Inbound Field Rules');
+        
+        for (var i = 0; i < inboundFieldRules.length; i++) {
+            var url = instance + "/x_pd_integration_pagerduty_inbound_field_rule.do?XML&sys_id=" + inboundFieldRules[i].sys_id;
+            var filename = inboundFieldRules[i].number + ".xml";
+            fetchAndSaveFile(url, filename, ifrFolder);
+        }
+    }
+}
+
+function fetchAssignmentGroups(zip) {
+	var instance = top.location.protocol + "//" + top.location.host;
+    var assignmentGroups = JSON.parse(document.getElementById('jvar_assignmentGroups').value);
+    var assignmentGroupsFolder = zip.folder('PagerDuty Assignment Groups');
+    
+    for (var i = 0; i < assignmentGroups.length; i++){
+        var url = instance + "/sys_user_group.do?XML&sys_id=" + assignmentGroups[i].sys_id;
+        var filename = assignmentGroups[i].name + ".xml";
+		fetchAndSaveFile(url, filename, assignmentGroupsFolder);
+    }
+}
+
+function fetchConfigurationItems(zip) {
+	var instance = top.location.protocol + "//" + top.location.host;
+    var configurationItems = JSON.parse(document.getElementById('jvar_configurationItems').value);
+    var configurationItemsFolder = zip.folder('PagerDuty Configuration Items');
+    
+    for (var i = 0; i < configurationItems.length; i++){
+        var url = instance + "/cmdb_ci.do?XML&sys_id=" + configurationItems[i].sys_id;
+        var filename = configurationItems[i].name + ".xml";
+		fetchAndSaveFile(url, filename, configurationItemsFolder);
+    }
+}
+
+function fetchIncidentState(zip) {
+	var instance = top.location.protocol + "//" + top.location.host;
+    var incidentChoices = JSON.parse(document.getElementById('jvar_incidentChoices').value);
+    var incidentChoicesFolder = zip.folder('Incident State Choice List');
+    
+    for (var i = 0; i < incidentChoices.length; i++){
+        var url = instance + "/sys_choice.do?XML&sys_id=" + incidentChoices[i].sys_id;
+        var filename = incidentChoices[i].label + ".xml";
+		fetchAndSaveFile(url, filename, incidentChoicesFolder);
+    }
+}
+
+function fetchpagerdutySettings(zip) {
+	var instance = top.location.protocol + "//" + top.location.host;
+    var pagerdutySettings = JSON.parse(document.getElementById('jvar_pdSettings').value);
+    var settingsFolder = zip.folder('PagerDuty Settings');
+    
+    for (var i = 0; i < pagerdutySettings.length; i++){
+        var url = instance + "/sys_properties.do?XML&sys_id=" + pagerdutySettings[i].sys_id;
+        var filename = pagerdutySettings[i].name + ".xml";
+		fetchAndSaveFile(url, filename, settingsFolder);
+    }
+}
+
+function downloadIncidentHistory() {
+  var instance = top.location.protocol + "//" + top.location.host;
+  var incidentID = document.getElementById('jvar_incidentID').value;
+  
+  var ga = new GlideAjax('x_pd_integration.IncidentHistoryLookup'); 
+  ga.addParam('sysparm_name', 'getIncidentHistorySysID');
+  ga.addParam('sysparm_incidentID', incidentID);
+  
+  ga.getXMLAnswer(function(response) {
+    var incidentHistorySysID = JSON.parse(response);
+	window.open(instance + '/sys_history_set.do?sys_id=' + incidentHistorySysID + '&sysparm_query=ORDERBYsys_updated_on&PDF');
+  })
+}
+
+function downloadZip(zip) {
+    zip.generateAsync({
+        type: "blob",
+        compression: "DEFLATE",
+        compressionOptions: {
+            level: 9
+        }
+    }).then(function(blob) {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = "IntegrationConfig.zip";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    });
+}
+
+
+function onClick() {
+    const zip = new JSZip();
+	fetchBusinessRules(zip);
+	fetchScriptInclude(zip);
+	fetchPagerDutyHealthCheck(zip);
+	fetchPriorityMappings(zip);
+	fetchInboundFieldRules(zip);
+	fetchAssignmentGroups(zip)
+	fetchConfigurationItems(zip)
+	fetchIncidentState(zip)
+	fetchpagerdutySettings(zip)
+	downloadZip(zip);
+} ]]></client_script>
+<description/>
+<direct>false</direct>
+<endpoint>x_pd_integration_download_config.do</endpoint>
+<html><![CDATA[<?xml version="1.0" encoding="utf-8" ?>
+<j:jelly trim="false" xmlns:j="jelly:core" xmlns:g="glide" xmlns:j2="null" xmlns:g2="null">
+
+    <g:evaluate var="jvar_businessRules">    
+        var br = new GlideRecordSecure('sys_script');
+        br.addQuery('sys_scope', '39a9d9664f834e00dd657bb28110c77b');
+		br.addActiveQuery();
+        br.query();
+        var brResult = [];
+        while (br.next()) {
+            brResult.push({
+                name: br.getValue('name').toString(),
+                sys_id: br.getValue('sys_id').toString()
+            });
+        }
+        var businessRules = JSON.stringify(brResult);
+        businessRules;
+    </g:evaluate>
+
+	<g:evaluate var="jvar_scriptInclude">   
+		var si = new GlideRecordSecure('sys_script_include');
+		si.addQuery('sys_scope', '39a9d9664f834e00dd657bb28110c77b');
+		si.addActiveQuery();
+		si.query();
+		var siResult = [];
+	    while (si.next()) {
+			siResult.push({
+				name: si.getValue('name').toString(),
+				sys_id: si.getValue('sys_id').toString()
+			});
+        }
+        var scriptInclude = JSON.stringify(siResult);
+        scriptInclude;
+	</g:evaluate>	
+
+	<g:evaluate var="jvar_pagerdutyHealthCheck">   
+		var healthCheck = new GlideRecordSecure('sys_script_execution_history');
+		healthCheck.addQuery('script', 'CONTAINS', 'HealthcheckController');
+		healthCheck.orderByDesc('sys_created_on');
+		healthCheck.setLimit(1);
+		healthCheck.query(); 
+		var healthCheckResult = [];
+		while (healthCheck.next()) {
+			healthCheckResult.push({
+				sys_id: healthCheck.getValue('sys_id').toString()
+			});
+		}
+		var pagerdutyHealthCheck = JSON.stringify(healthCheckResult);
+		pagerdutyHealthCheck;
+	</g:evaluate>
+
+	<g:evaluate var="jvar_priorityMappings">   
+		var priorityMappings = new GlideRecordSecure('x_pd_integration_pagerduty_priority');
+		priorityMappings.query();
+		var priorityMappingsResult = [];
+		while (priorityMappings.next()) {
+			priorityMappingsResult.push({
+				name: priorityMappings.getValue('pagerduty_priority').toString(),
+				sys_id: priorityMappings.getValue('sys_id').toString()
+			});
+		}
+		var pagerdutyPriorityMappings = JSON.stringify(priorityMappingsResult);
+		pagerdutyPriorityMappings;
+	</g:evaluate>
+
+	<g:evaluate var="jvar_inboundFieldRules">   
+		var fieldRules = new GlideRecordSecure('x_pd_integration_pagerduty_inbound_field_rule');
+		fieldRules.addActiveQuery();
+		fieldRules.query();
+		var fieldRulesResult = [];
+		while (fieldRules.next()) {
+			fieldRulesResult.push({
+				number: fieldRules.getValue('number').toString(),
+				sys_id: fieldRules.getValue('sys_id').toString()
+			});
+		}
+		var inboundFieldRules = JSON.stringify(fieldRulesResult);  // Changed variable name
+		inboundFieldRules;
+	</g:evaluate>
+
+	<g:evaluate var="jvar_assignmentGroups">   
+		var groups = new GlideRecordSecure('sys_user_group');
+		groups.addNotNullQuery('x_pd_integration_pagerduty_escalation');
+		groups.addActiveQuery();
+		groups.query();
+		var groupsResult = [];
+		while (groups.next()) {
+			groupsResult.push({
+				name: groups.getValue('name').toString(),
+				sys_id: groups.getValue('sys_id').toString()
+			});
+		}
+		var assignmentGroups = JSON.stringify(groupsResult);
+		assignmentGroups ;
+	</g:evaluate>
+
+	<g:evaluate var="jvar_configurationItems">   
+		var items = new GlideRecordSecure('cmdb_ci');
+		items.addNotNullQuery('x_pd_integration_pagerduty_service');
+		items.query();
+		var itemsResult = [];
+		while (items.next()) {
+			itemsResult.push({
+				name: items.getValue('name').toString(),
+				sys_id: items.getValue('sys_id').toString()
+			});
+		}
+		var configurationItems = JSON.stringify(itemsResult);
+		configurationItems ;
+	</g:evaluate>
+
+	<g:evaluate var="jvar_incidentChoices">   
+		var choices = new GlideRecordSecure('sys_choice');
+		choices.addQuery('name', "incident");
+		choices.addQuery('element', "state");
+		choices.query();
+		var choicesResult = [];
+		while (choices.next()) {
+			choicesResult.push({
+				label: choices.getValue('label').toString(),
+				sys_id: choices.getValue('sys_id').toString()
+			});
+		}
+		var incidentChoices = JSON.stringify(choicesResult);
+		incidentChoices;
+	</g:evaluate>
+
+	<g:evaluate var="jvar_pdSettings">   
+		var settings = new GlideRecordSecure('sys_properties');
+		settings.addQuery('sys_scope', '39a9d9664f834e00dd657bb28110c77b');
+		settings.addQuery('name', '!=','x_pd_integration.pd_logo');
+		settings.addQuery('type', 'DOES NOT CONTAIN','password');
+		settings.addQuery('name', 'DOES NOT CONTAIN','tracking');
+		settings.addQuery('name', 'DOES NOT CONTAIN','webhook_process');
+		settings.addQuery('name', 'DOES NOT CONTAIN','testing_mode');
+		settings.addQuery('name', 'DOES NOT CONTAIN','config_file');
+		settings.addQuery('name', 'DOES NOT CONTAIN','request_receiver');
+		settings.addQuery('name', 'DOES NOT CONTAIN','client.globals');
+		settings.addQuery('name', 'DOES NOT CONTAIN','first_trigger_log');
+		settings.addQuery('name', 'DOES NOT CONTAIN','maint_window');
+		settings.addQuery('name', 'DOES NOT CONTAIN','v2_identified');
+		settings.addQuery('name', 'DOES NOT CONTAIN','ecc_params');
+		settings.query();
+		
+		var settingsResult = [];
+		while (settings.next()) {
+			settingsResult.push({
+				name: settings.getValue('name').toString(),
+				sys_id: settings.getValue('sys_id').toString()
+			});
+		}
+		var pdSettings = JSON.stringify(settingsResult);
+		pdSettings;
+	</g:evaluate>
+
+    <input id="jvar_businessRules" value="${jvar_businessRules}" hidden="true"/>
+	<input id="jvar_scriptInclude" value="${jvar_scriptInclude}" hidden="true"/>
+	<input id="jvar_pagerdutyHealthCheck" value="${jvar_pagerdutyHealthCheck}" hidden="true"/>
+	<input id="jvar_priorityMappings" value="${jvar_priorityMappings}" hidden="true"/>
+	<input id="jvar_inboundFieldRules" value="${jvar_inboundFieldRules}" hidden="true"/>
+	<input id="jvar_assignmentGroups" value="${jvar_assignmentGroups}" hidden="true"/>
+	<input id="jvar_configurationItems" value="${jvar_configurationItems}" hidden="true"/>
+	<input id="jvar_incidentChoices" value="${jvar_incidentChoices}" hidden="true"/>
+	<input id="jvar_pdSettings" value="${jvar_pdSettings}" hidden="true"/>
+	
+
+    <g:ui_form>
+        <div class="panel panel-default">
+			<div class="panel-heading" role="tab" id="pageHeading">
+				<h3 class="panel-title" style="font-size: 24px; font-weight: bold;">
+					Integration Config Files
+				</h3>
+			</div>
+            <div>
+                <br></br>
+                ▪️ PagerDuty Integration Settings<br></br>
+                ▪️ PagerDuty Business Rules<br></br>
+                ▪️ PagerDuty Script Includes<br></br>
+                ▪️ PagerDuty Integration Health Check<br></br>
+                ▪️ PagerDuty Priority Mappings<br></br>
+                ▪️ PagerDuty Assignment Group Mappings<br></br>
+                ▪️ PagerDuty Configuration Item Mappings<br></br>
+                ▪️ PagerDuty Inbound Field Rules<br></br>
+				▪️ Incident State Choice List<br></br>
+            </div>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+            <button id="downloadConfig" onclick="return onClick(event);" type="button" class="btn btn-primary">Download Integration Config Files</button>
+        </div>
+		<br></br>
+		<div class="panel panel-default">
+			<div class="panel-heading" role="tab" id="pageHeading">
+				<h3 class="panel-title" style="font-size: 24px; font-weight: bold;">
+					Download Incident History List
+				</h3>
+			</div>
+			<br></br>
+			<div>
+				Enter an Incident ID (e.g. INC0010006) below:
+				<br></br>
+				<input id="jvar_incidentID" value="${jvar_incidentID}" />
+				<br></br>
+				<button id="downloadHistory" type="button" onclick="downloadIncidentHistory();" class="btn btn-primary">Download Incident History</button>
+	        </div>
+			<input id="jvar_incidentID" value="${jvar_incidentID}" hidden="true"/>			
+		</div>
+    </g:ui_form>
+	
+</j:jelly>]]></html>
+<name>download_config</name>
+<processing_script/>
+<sys_class_name>sys_ui_page</sys_class_name>
+<sys_created_by>admin</sys_created_by>
+<sys_created_on>2025-02-07 18:18:26</sys_created_on>
+<sys_id>949fea0a83a312101d327596feaad391</sys_id>
+<sys_mod_count>492</sys_mod_count>
+<sys_name>download_config</sys_name>
+<sys_package display_value="PagerDuty Incident Resolution Platform" source="x_pd_integration">39a9d9664f834e00dd657bb28110c77b</sys_package>
+<sys_policy/>
+<sys_scope display_value="PagerDuty Incident Resolution Platform">39a9d9664f834e00dd657bb28110c77b</sys_scope>
+<sys_update_name>sys_ui_page_949fea0a83a312101d327596feaad391</sys_update_name>
+<sys_updated_by>admin</sys_updated_by>
+<sys_updated_on>2025-02-17 21:54:00</sys_updated_on>
+</sys_ui_page>
+</unload>
